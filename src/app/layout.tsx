@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { TypesenseProvider } from "@/providers/typesenseProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -10,13 +11,23 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({
+  auth,
   children,
 }: Readonly<{
+  auth: React.ReactNode
   children: React.ReactNode;
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <body className={inter.className}>
+        <TypesenseProvider>
+          <>
+            {auth}
+            {children}
+          </>
+        </TypesenseProvider>
+        
+      </body>
     </html>
   );
 }
