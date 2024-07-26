@@ -162,7 +162,7 @@ export function Sidebar({ children }: { readonly children: React.ReactNode }) {
       <main
         className={`content ml-12 ${
           open && "md:ml-60"
-        } transform ease-in-out duration-500 pt-20 px-2 md:px-5 pb-4`}
+        } transform ease-in-out duration-500 pt-24 px-2 md:px-8 pb-4`}
       >
         {children}
       </main>

@@ -19,7 +19,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.className} bg-zinc-100 dark:bg-[#0F172A]`}>
+      <body className={`${inter.className} text-black dark:text-white bg-zinc-100 dark:bg-[#0F172A]`}>
         <TypesenseProvider>
           <Sidebar>{children}</Sidebar>
         </TypesenseProvider>

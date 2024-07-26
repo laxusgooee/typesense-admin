@@ -47,6 +47,10 @@ export const useAuthStore = create<AuthState & AuthActions>()(
       }),
       {
         name: 'auth-storage',
+        partialize: (state) =>
+          Object.fromEntries(
+            Object.entries(state).filter(([key]) => !['_hydrated'].includes(key)),
+          ),
         onRehydrateStorage: (_state) => {
           console.log('hydration starts')
           return (state, error) => {
