@@ -51,9 +51,13 @@ export function AuthenticatedLayout({ children }: { readonly children : React.Re
   }, [_hydrated, apiKey, router, checkClient]);
  
   return (
-    <div>
-        {loading && <p>Loading...</p>}
-        {children}
-    </div>
+    <>
+        {loading && (
+            <div className="flex min-h-screen items-center justify-center">
+                <p>Loading...</p>
+            </div>
+        )}
+        {_hydrated && children}
+    </>
   )
 }
