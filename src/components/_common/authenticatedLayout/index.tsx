@@ -4,39 +4,42 @@ import Typesense from "typesense";
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTypesense } from '@/providers/typesenseProvider';
-import { useBearStore } from '@/store/user';
+import { AuthState, useAuthStore } from '@/store/auth';
  
 export function AuthenticatedLayout({ children }: { readonly children : React.ReactNode }) {
   const router = useRouter();
   const typesense = useTypesense();
-  const { apiKey } = useBearStore();
+  const {_hydrated, apiKey, nodes} = useAuthStore((state) => state as AuthState);
 
   const [loading, setLoading] = useState(true);
+  
 
-  const checkClient = useCallback(async () => {
-    const res = await typesense?.client?.health.retrieve();
+    const checkClient = useCallback(async () => {
+        const res = await typesense?.client?.health.retrieve();
+        if (res?.ok) {
+            return setLoading(false);
+        }
+        
+        const client = new Typesense.Client({
+            'nodes': nodes,
+            'apiKey': apiKey as string,
+            'connectionTimeoutSeconds': 2
+        });
 
-    if (res?.ok) {
+        typesense?.setClient(client);
+
+        // todo: check health
+
         return setLoading(false);
-    }
-
-    const client = new Typesense.Client({
-        'nodes': [{
-            'host': 'localhost',
-            'port': 8108,
-            'protocol': 'http'
-        }],
-        'apiKey': apiKey as string,
-        'connectionTimeoutSeconds': 2
-    });
-
-    typesense?.setClient(client);
-
-    return setLoading(false);
-  }, [apiKey, typesense]);
+    }, [apiKey, nodes, typesense]);
 
   useEffect(() => {
     setLoading(true);
+
+    if (!_hydrated) {
+      return;
+    }
+
     if (!apiKey) {
         router.push("/login");
 
@@ -45,7 +48,7 @@ export function AuthenticatedLayout({ children }: { readonly children : React.Re
 
     checkClient();
     
-  }, [apiKey, router, checkClient]);
+  }, [_hydrated, apiKey, router, checkClient]);
  
   return (
     <div>

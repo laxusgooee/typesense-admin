@@ -23,10 +23,11 @@ export default function RootLayout({
         <TypesenseProvider>
           <>
             {auth}
-            {children}
+            <main className="relative min-h-screen flex flex-col bg-white dark:bg-slate-900">
+              {children}
+            </main>
           </>
         </TypesenseProvider>
-        
       </body>
     </html>
   );
