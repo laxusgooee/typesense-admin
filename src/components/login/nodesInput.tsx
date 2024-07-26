@@ -3,6 +3,7 @@
 import { Controller} from "react-hook-form";
 import { Input } from "./input";
 import { v4  } from 'uuid';
+import { TrashIcon } from '@heroicons/react/24/solid';
 
 type NodesInputProps = {
     control: any;
@@ -42,7 +43,9 @@ export function NodesInput({
                                             name={`nodes.${index}.protocol`}
                                             placeholder="Enter Protocol"
                                         />
-                                        <button type="button" className="text-red-500 hover:text-red-700" onClick={() => onRemoveNode(index)}>x</button>
+                                        <button type="button" className="pt-2 text-red-500 hover:text-red-700" onClick={() => onRemoveNode(index)}>
+                                            <TrashIcon aria-hidden="true" className="h-5 w-5" />
+                                        </button>
                                     </div>
                                 </div>
                             ))}                   
