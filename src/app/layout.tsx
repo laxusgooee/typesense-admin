@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import "./globals.css";
 import { TypesenseProvider } from "@/providers/typesenseProvider";
-import { Sidebar } from "@/components/_common/sidebar";
+import { NextuiProvider } from "@/providers/nextuiProvider";
+import { ToastProvider } from "@/providers/toastProvider";
+
+import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -19,9 +21,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.className} text-black dark:text-white bg-zinc-100 dark:bg-[#0F172A]`}>
+      <body
+        className={`${inter.className} text-black dark:text-white bg-zinc-100 dark:bg-[#0F172A]`}
+      >
         <TypesenseProvider>
-          <Sidebar>{children}</Sidebar>
+          <NextuiProvider>
+            <ToastProvider>{children}</ToastProvider>
+          </NextuiProvider>
         </TypesenseProvider>
       </body>
     </html>
