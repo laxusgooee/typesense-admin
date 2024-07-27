@@ -1,203 +1,213 @@
 "use client";
 
 import { useTypesense } from "@/providers/typesenseProvider";
-import {
-	Button,
-	Dialog,
-	DialogBackdrop,
-	DialogPanel,
-	DialogTitle,
-	Field,
-	Fieldset,
-	Input,
-	Label,
-	Legend,
-	Switch,
-} from "@headlessui/react";
 import { PlusIcon, TrashIcon } from "@heroicons/react/24/solid";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useState } from "react";
 import { SubmitHandler, useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  Button,
+  useDisclosure,
+  Input,
+  Switch,
+  Divider,
+  Select,
+  SelectItem,
+} from "@nextui-org/react";
+import { toast } from "react-toastify";
+
+const FIELDS_TYPES = [
+  "string",
+  "int32",
+  "int64",
+  "float",
+  "auto",
+  "bool",
+  "image",
+];
 
 const NodeSchema = z.object({
-	name: z.string().min(2, { message: "Host is required" }),
-	type: z.string().min(2, { message: "Port is required" }),
-	facet: z.boolean(),
+  name: z.string().min(2, { message: "Field name is required" }),
+  type: z.string().min(2, { message: "Field type is required" }),
+  facet: z.boolean(),
+  optional: z.boolean().optional(),
+  index: z.boolean().optional(),
 });
 
-const LoginFormSchema = z.object({
-	name: z.string().min(1, { message: "Name is required" }),
-	fields: z.array(NodeSchema).min(1, { message: "Field is required" }),
-	default_sorting_field: z.string().optional(),
+const CreateCategoryFormSchema = z.object({
+  name: z.string().min(1, { message: "Name is required" }),
+  fields: z.array(NodeSchema).min(1, { message: "Field is required" }),
+  default_sorting_field: z.string().optional(),
 });
 
-type LoginFormInputs = z.infer<typeof LoginFormSchema>;
+type CreateCategoryFormInputs = z.infer<typeof CreateCategoryFormSchema>;
+
+function Form({ onClose }: { onClose: (e?: any) => void }) {
+  const typesense = useTypesense();
+
+  const {
+    register,
+    control,
+    getValues,
+    handleSubmit,
+    formState: { errors, isSubmitting, isDirty },
+  } = useForm<CreateCategoryFormInputs>({
+    resolver: zodResolver(CreateCategoryFormSchema),
+    mode: "onBlur",
+    values: {
+      name: "",
+      fields: [
+        {
+          name: ".*",
+          type: "auto",
+          facet: false,
+          optional: false,
+        },
+      ],
+    },
+  });
+
+  const { fields, append, update, remove } = useFieldArray({
+    control,
+    name: "fields",
+  });
+
+  const onSubmit: SubmitHandler<CreateCategoryFormInputs> = async (data) => {
+    try {
+      await typesense?.client?.collections().create(data as any);
+
+      toast.success("Collection created successfully");
+
+      onClose();
+    } catch (error: any) {
+      toast.error(error?.message);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} className="pb-3">
+      <div className="space-y-6">
+        <div>
+          <Input
+            autoFocus
+            label="Name"
+            labelPlacement="outside"
+            isInvalid={!!errors.name}
+            errorMessage={errors.name?.message}
+            placeholder="Enter Collection name"
+            {...register("name")}
+          />
+        </div>
+
+        <Divider />
+
+        <div className="space-y-1">
+          <div className="text-sm font-bold flex justify-between items-center">
+            Fields
+            <Button
+              size="sm"
+              variant="light"
+              onClick={() => {
+                append({
+                  name: ".*",
+                  type: "auto",
+                  facet: false,
+                });
+              }}
+            >
+              <PlusIcon className="h-5 w-5" />
+            </Button>
+          </div>
+          <div className="space-y-5">
+            {fields.map((field, index) => (
+              <div key={field.id} className="flex gap-2">
+                <div className="flex-1 space-y-1.5">
+                  <div>
+                    <Input
+                      label="Name"
+                      isInvalid={!!errors.fields?.[index]?.name}
+                      errorMessage={errors.fields?.[index]?.name?.message}
+                      {...register(`fields.${index}.name`)}
+                    />
+                  </div>
+                  <div>
+                    <Select
+                      label="Type"
+                      {...register(`fields.${index}.type`)}
+                    >
+                      {FIELDS_TYPES.map((type) => (
+                        <SelectItem key={type} value={type}>
+                          {type}
+                        </SelectItem>
+                      ))}
+                    </Select>
+                  </div>
+                  <Switch
+                    isSelected={getValues(`fields.${index}.facet`)}
+                    onValueChange={(value) => {
+                      update(index, {
+                        ...getValues(`fields.${index}`),
+                        facet: value,
+                      });
+                    }}
+                  >
+                    Facet
+                  </Switch>
+                </div>
+
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    remove(index);
+                  }}
+                >
+                  <TrashIcon className="h-5 w-5" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <span className="text-sm text-danger-300">
+          {errors.fields?.message}
+        </span>
+      </div>
+
+      <div className="flex justify-end">
+        <Button
+          type="submit"
+          color="primary"
+          disabled={isSubmitting || !isDirty}
+          className="rounded bg-primary py-2 px-4 text-sm text-white data-[hover]:bg-primary-dark"
+        >
+          Save changes
+        </Button>
+      </div>
+    </form>
+  );
+}
 
 export function AddCollection() {
-	const typesense = useTypesense();
+  const { isOpen, onOpen, onOpenChange, onClose } = useDisclosure();
 
-	let [isOpen, setIsOpen] = useState(false);
-
-	const {
-		register,
-		control,
-		getValues,
-		handleSubmit,
-		reset,
-		formState: { errors, isSubmitting, isDirty, isValid },
-	} = useForm<LoginFormInputs>({
-		resolver: zodResolver(LoginFormSchema),
-		mode: "onBlur",
-		values: {
-			name: "",
-			fields: [
-				{
-					name: ".*",
-					type: "auto",
-					facet: false,
-				},
-			],
-		},
-	});
-
-	const { fields, append, update, remove } = useFieldArray({
-		control,
-		name: "fields",
-	});
-
-	useEffect(() => {
-		if (!isOpen) {
-			setTimeout(() => {
-				reset();
-			}, 500);
-		}
-	}, [isOpen, reset]);
-
-	const onSubmit: SubmitHandler<LoginFormInputs> = async (data) => {
-		try {
-			await typesense?.client?.collections().create(data as any);
-
-			setIsOpen(false);
-		} catch (error) {
-			console.error(error);
-		}
-	};
-
-	return (
-		<>
-			<Button className="flex gap-2" onClick={() => setIsOpen(true)}>
-				<PlusIcon className="h-5 w-5" />
-				<span>Create collection</span>
-			</Button>
-			<Dialog open={isOpen} onClose={setIsOpen} className="relative z-50">
-				<DialogBackdrop
-					transition
-					className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity data-[closed]:opacity-0 data-[enter]:duration-300 data-[leave]:duration-200 data-[enter]:ease-out data-[leave]:ease-in"
-				/>
-
-				<div className="fixed inset-0 z-10 w-screen overflow-y-auto">
-					<div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-						<DialogPanel
-							transition
-							className="relative transform overflow-hidden rounded-lg bg-white dark:bg-[#1E293B] text-left shadow-xl transition-all data-[closed]:translate-y-4 data-[closed]:opacity-0 data-[enter]:duration-300 data-[leave]:duration-200 data-[enter]:ease-out data-[leave]:ease-in sm:my-8 sm:w-full sm:max-w-lg data-[closed]:sm:translate-y-0 data-[closed]:sm:scale-95"
-						>
-							<div className="px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
-								<DialogTitle className="font-bold mb-2">
-									Create collection
-								</DialogTitle>
-								<hr />
-								<form
-									onSubmit={handleSubmit(onSubmit)}
-									className="mt-2 space-y-6"
-								>
-									<div className="space-y-6">
-										<Field>
-											<Label
-												htmlFor="name"
-												className="block text-sm font-medium leading-6"
-											>
-												Name
-											</Label>
-											<Input
-												id="name"
-												invalid={!!errors.name}
-												placeholder="Enter name"
-												className="w-full"
-												{...register("name")}
-											/>
-										</Field>
-
-										<Fieldset className="space-y-1">
-											<Legend className="text-lg font-bold flex justify-between">
-												Fields
-												<Button
-													onClick={() => {
-														append({
-															name: ".*",
-															type: "auto",
-															facet: false,
-														});
-													}}
-												>
-													<PlusIcon className="h-5 w-5" />
-												</Button>
-											</Legend>
-											{fields.map((field, index) => (
-												<div key={field.id} className="">
-													<Field>
-														<Label className="block">Name</Label>
-														<Input
-															className="mt-1 block"
-															{...register(`fields.${index}.name`)}
-														/>
-													</Field>
-													<Field>
-														<Label className="block">Type</Label>
-														<Input
-															className="mt-1 block"
-															{...register(`fields.${index}.type`)}
-														/>
-													</Field>
-													<Switch
-														checked={getValues(`fields.${index}.facet`)}
-														onChange={(value) => {
-															update(index, {
-																...getValues(`fields.${index}`),
-																facet: value,
-															});
-														}}
-														className="group inline-flex h-6 w-11 items-center rounded-full bg-gray-200 transition data-[checked]:bg-blue-600"
-													>
-														<span className="size-4 translate-x-1 rounded-full bg-white transition group-data-[checked]:translate-x-6" />
-													</Switch>
-
-													<Button
-														onClick={() => {
-															remove(index);
-														}}
-													>
-														<TrashIcon className="h-5 w-5" />
-													</Button>
-												</div>
-											))}
-										</Fieldset>
-									</div>
-									<div className="flex justify-end gap-4">
-										<Button
-											type="submit"
-											disabled={isSubmitting || !isDirty || !isValid}
-											className="rounded bg-primary py-2 px-4 text-sm text-white data-[hover]:bg-primary-dark"
-										>
-											Save changes
-										</Button>
-									</div>
-								</form>
-							</div>
-						</DialogPanel>
-					</div>
-				</div>
-			</Dialog>
-		</>
-	);
+  return (
+    <>
+      <Button className="flex gap-2" onClick={onOpen}>
+        <PlusIcon className="h-5 w-5" />
+        <span>Create collection</span>
+      </Button>
+      <Modal size="lg" isOpen={isOpen} onOpenChange={onOpenChange}>
+        <ModalContent>
+          <ModalHeader className="font-bold">Create collection</ModalHeader>
+          <ModalBody>
+            <Form onClose={onClose} />
+          </ModalBody>
+        </ModalContent>
+      </Modal>
+    </>
+  );
 }

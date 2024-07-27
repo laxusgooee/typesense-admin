@@ -9,6 +9,7 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import ThemeSwitch from "../themeSwitch";
 
 const SidebarItem = ({
 	icon,
@@ -41,15 +42,6 @@ const SidebarItem = ({
 
 export function Sidebar({ children }: { readonly children: React.ReactNode }) {
 	const [open, setOpen] = useState(false);
-	const [isDark, setIsDark] = useState(true);
-
-	useEffect(() => {
-		if (isDark) {
-			document.documentElement.classList.add("dark");
-		} else {
-			document.documentElement.classList.remove("dark");
-		}
-	}, [isDark]);
 
 	useEffect(() => {}, [open]);
 
@@ -87,34 +79,7 @@ export function Sidebar({ children }: { readonly children: React.ReactNode }) {
 					} w-full -right-6 transition transform ease-in duration-300 flex items-center justify-between border-4 border-white dark:border-[#0F172A] bg-[#1E293B]  absolute top-2 rounded-full h-12`}
 				>
 					<div className="flex pl-4 items-center space-x-2 ">
-						<div>
-							<div
-								onClick={() => setIsDark(!isDark)}
-								className="text-white hover:text-blue-500 dark:hover:text-[#38BDF8]"
-							>
-								{isDark ? (
-									<SunIcon className="w-4 h-4" />
-								) : (
-									<MoonIcon className="w-4 h-4" />
-								)}
-							</div>
-						</div>
-						<div className="text-white hover:text-blue-500 dark:hover:text-[#38BDF8]">
-							<svg
-								xmlns="http://www.w3.org/2000/svg"
-								fill="none"
-								viewBox="0 0 24 24"
-								strokeWidth={3}
-								stroke="currentColor"
-								className="w-4 h-4"
-							>
-								<path
-									strokeLinecap="round"
-									strokeLinejoin="round"
-									d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"
-								/>
-							</svg>
-						</div>
+					<ThemeSwitch />
 					</div>
 					<div className="flex items-center space-x-3 group bg-gradient-to-r dark:from-cyan-500 dark:to-blue-500 from-indigo-500 via-purple-500 to-purple-500  pl-10 pr-2 py-1 rounded-full text-white  ">
 						<div className="transform ease-in-out duration-300 mr-12">

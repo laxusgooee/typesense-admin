@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { useTypesense } from "@/providers/typesenseProvider";
 import { AuthState, useAuthStore } from "@/store/auth";
 
+import { Sidebar } from "../sidebar";
+
 export function AuthenticatedLayout({
 	children,
 }: {
@@ -55,13 +57,13 @@ export function AuthenticatedLayout({
 	}, [_hydrated, apiKey, router, checkClient]);
 
 	return (
-		<>
+		<Sidebar>
 			{loading && (
 				<div className="flex min-h-screen items-center justify-center">
 					<p>Loading...</p>
 				</div>
 			)}
 			{_hydrated && children}
-		</>
+		</Sidebar>
 	);
 }
