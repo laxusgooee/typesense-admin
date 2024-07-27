@@ -16,7 +16,6 @@ import {
 } from "@headlessui/react";
 import { PlusIcon, TrashIcon } from "@heroicons/react/24/solid";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { get } from "http";
 import { useEffect, useState } from "react";
 import { SubmitHandler, useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
@@ -44,7 +43,6 @@ export function AddCollection() {
     register,
     control,
     getValues,
-    setValue,
     handleSubmit,
     reset,
     formState: { errors, isSubmitting, isDirty, isValid },
@@ -88,8 +86,11 @@ export function AddCollection() {
 
   return (
     <>
-      <button onClick={() => setIsOpen(true)}>Open dialog</button>
-      <Dialog open={isOpen} onClose={setIsOpen} className="relative z-10">
+      <Button className="flex gap-2" onClick={() => setIsOpen(true)}>
+        <PlusIcon className="h-5 w-5" />
+        <span>Create collection</span>
+      </Button>
+      <Dialog open={isOpen} onClose={setIsOpen} className="relative z-50">
         <DialogBackdrop
           transition
           className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity data-[closed]:opacity-0 data-[enter]:duration-300 data-[leave]:duration-200 data-[enter]:ease-out data-[leave]:ease-in"
