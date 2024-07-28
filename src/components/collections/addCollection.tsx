@@ -1,6 +1,5 @@
 "use client";
 
-import { useTypesense } from "@/providers/typesenseProvider";
 import { PlusIcon, TrashIcon } from "@heroicons/react/24/solid";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { SubmitHandler, useFieldArray, useForm } from "react-hook-form";
@@ -19,6 +18,8 @@ import {
 	SelectItem,
 } from "@nextui-org/react";
 import { toast } from "react-toastify";
+import useCreateTypesenseCollection from "@/hooks/useCreateTypesenseCollection";
+import { CollectionSchema } from "typesense/lib/Typesense/Collection";
 
 const FIELDS_TYPES = [
 	"string",
@@ -46,9 +47,7 @@ const CreateCategoryFormSchema = z.object({
 
 type CreateCategoryFormInputs = z.infer<typeof CreateCategoryFormSchema>;
 
-function Form({ onClose }: { onClose: (e?: any) => void }) {
-	const typesense = useTypesense();
-
+function Form({ onSubmit }: { onSubmit: (e?: any) => void }) {
 	const {
 		register,
 		control,
@@ -74,18 +73,6 @@ function Form({ onClose }: { onClose: (e?: any) => void }) {
 		control,
 		name: "fields",
 	});
-
-	const onSubmit: SubmitHandler<CreateCategoryFormInputs> = async (data) => {
-		try {
-			await typesense?.client?.collections().create(data as any);
-
-			toast.success("Collection created successfully");
-
-			onClose();
-		} catch (error: any) {
-			toast.error(error?.message);
-		}
-	};
 
 	return (
 		<form onSubmit={handleSubmit(onSubmit)} className="pb-3">
@@ -187,8 +174,30 @@ function Form({ onClose }: { onClose: (e?: any) => void }) {
 	);
 }
 
-export function AddCollection() {
+export function AddCollection({
+	onCollectionCreated,
+}: {
+	onCollectionCreated?: (collection: CollectionSchema) => void;
+}) {
+	const createCollectionMutation = useCreateTypesenseCollection();
 	const { isOpen, onOpen, onOpenChange, onClose } = useDisclosure();
+
+	const onSubmit: SubmitHandler<CreateCategoryFormInputs> = async (data) => {
+		createCollectionMutation.mutate(data, {
+			onSuccess: (collection) => {
+				toast.success("Collection created successfully");
+
+				if (onCollectionCreated) {
+					onCollectionCreated(collection);
+				}
+
+				onClose();
+			},
+			onError: (err) => {
+				toast.error(err?.message);
+			},
+		});
+	};
 
 	return (
 		<>
@@ -200,7 +209,7 @@ export function AddCollection() {
 				<ModalContent>
 					<ModalHeader className="font-bold">Create collection</ModalHeader>
 					<ModalBody>
-						<Form onClose={onClose} />
+						<Form onSubmit={onSubmit} />
 					</ModalBody>
 				</ModalContent>
 			</Modal>

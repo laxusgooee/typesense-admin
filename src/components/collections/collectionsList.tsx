@@ -1,6 +1,5 @@
 "use client";
 
-import useGetTypesenseCollections from "@/hooks/useGetTypesenseCollections";
 import { CogIcon } from "@heroicons/react/24/solid";
 import {
 	Table,
@@ -13,10 +12,13 @@ import {
 	Button,
 } from "@nextui-org/react";
 import Link from "next/link";
+import { CollectionSchema } from "typesense/lib/Typesense/Collection";
 
-export default function CollectionsList() {
-	const collections = useGetTypesenseCollections();
-
+export default function CollectionsList({
+	data = [],
+}: {
+	data?: CollectionSchema[];
+}) {
 	const columns = [
 		{
 			key: "name",
@@ -61,27 +63,22 @@ export default function CollectionsList() {
 
 	return (
 		<div>
-			<div>
-				<Table aria-label="Example static collection table">
-					<TableHeader columns={columns}>
-						{(column) => (
-							<TableColumn key={column.key}>{column.label}</TableColumn>
-						)}
-					</TableHeader>
-					<TableBody
-						items={collections?.data ?? []}
-						emptyContent={"No rows to display."}
-					>
-						{(item) => (
-							<TableRow key={item.name}>
-								{(columnKey) => (
-									<TableCell>{getKeyCell(item, columnKey as string)}</TableCell>
-								)}
-							</TableRow>
-						)}
-					</TableBody>
-				</Table>
-			</div>
+			<Table aria-label="Example static collection table">
+				<TableHeader columns={columns}>
+					{(column) => (
+						<TableColumn key={column.key}>{column.label}</TableColumn>
+					)}
+				</TableHeader>
+				<TableBody items={data} emptyContent={"No rows to display."}>
+					{(item) => (
+						<TableRow key={item.name}>
+							{(columnKey) => (
+								<TableCell>{getKeyCell(item, columnKey as string)}</TableCell>
+							)}
+						</TableRow>
+					)}
+				</TableBody>
+			</Table>
 		</div>
 	);
 }
