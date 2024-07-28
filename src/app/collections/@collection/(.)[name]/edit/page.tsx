@@ -10,7 +10,6 @@ import {
 	ModalHeader,
 } from "@nextui-org/react";
 import { useParams } from "next/navigation";
-import ViewCollection from "@/components/collections/viewCollection";
 
 export default function Home() {
 	const params = useParams<{ name: string }>();
@@ -28,9 +27,7 @@ export default function Home() {
 			<Modal isOpen={isOpen} onOpenChange={onOpenChange}>
 				<ModalContent>
 					<ModalHeader className="font-bold">Collection</ModalHeader>
-					<ModalBody>
-						<ViewCollection name={params.name} />
-					</ModalBody>
+					<ModalBody>{params.name}</ModalBody>
 				</ModalContent>
 			</Modal>
 		</>

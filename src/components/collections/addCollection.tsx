@@ -6,208 +6,204 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { SubmitHandler, useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
 import {
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  Button,
-  useDisclosure,
-  Input,
-  Switch,
-  Divider,
-  Select,
-  SelectItem,
+	Modal,
+	ModalContent,
+	ModalHeader,
+	ModalBody,
+	Button,
+	useDisclosure,
+	Input,
+	Switch,
+	Divider,
+	Select,
+	SelectItem,
 } from "@nextui-org/react";
 import { toast } from "react-toastify";
 
 const FIELDS_TYPES = [
-  "string",
-  "int32",
-  "int64",
-  "float",
-  "auto",
-  "bool",
-  "image",
+	"string",
+	"int32",
+	"int64",
+	"float",
+	"auto",
+	"bool",
+	"image",
 ];
 
 const NodeSchema = z.object({
-  name: z.string().min(2, { message: "Field name is required" }),
-  type: z.string().min(2, { message: "Field type is required" }),
-  facet: z.boolean(),
-  optional: z.boolean().optional(),
-  index: z.boolean().optional(),
+	name: z.string().min(2, { message: "Field name is required" }),
+	type: z.string().min(2, { message: "Field type is required" }),
+	facet: z.boolean(),
+	optional: z.boolean().optional(),
+	index: z.boolean().optional(),
 });
 
 const CreateCategoryFormSchema = z.object({
-  name: z.string().min(1, { message: "Name is required" }),
-  fields: z.array(NodeSchema).min(1, { message: "Field is required" }),
-  default_sorting_field: z.string().optional(),
+	name: z.string().min(1, { message: "Name is required" }),
+	fields: z.array(NodeSchema).min(1, { message: "Field is required" }),
+	default_sorting_field: z.string().optional(),
 });
 
 type CreateCategoryFormInputs = z.infer<typeof CreateCategoryFormSchema>;
 
 function Form({ onClose }: { onClose: (e?: any) => void }) {
-  const typesense = useTypesense();
+	const typesense = useTypesense();
 
-  const {
-    register,
-    control,
-    getValues,
-    handleSubmit,
-    formState: { errors, isSubmitting, isDirty },
-  } = useForm<CreateCategoryFormInputs>({
-    resolver: zodResolver(CreateCategoryFormSchema),
-    mode: "onBlur",
-    values: {
-      name: "",
-      fields: [
-        {
-          name: ".*",
-          type: "auto",
-          facet: false,
-          optional: false,
-        },
-      ],
-    },
-  });
+	const {
+		register,
+		control,
+		getValues,
+		handleSubmit,
+		formState: { errors, isSubmitting, isDirty },
+	} = useForm<CreateCategoryFormInputs>({
+		resolver: zodResolver(CreateCategoryFormSchema),
+		mode: "onBlur",
+		values: {
+			name: "",
+			fields: [
+				{
+					name: ".*",
+					type: "auto",
+					facet: false,
+				},
+			],
+		},
+	});
 
-  const { fields, append, update, remove } = useFieldArray({
-    control,
-    name: "fields",
-  });
+	const { fields, append, update, remove } = useFieldArray({
+		control,
+		name: "fields",
+	});
 
-  const onSubmit: SubmitHandler<CreateCategoryFormInputs> = async (data) => {
-    try {
-      await typesense?.client?.collections().create(data as any);
+	const onSubmit: SubmitHandler<CreateCategoryFormInputs> = async (data) => {
+		try {
+			await typesense?.client?.collections().create(data as any);
 
-      toast.success("Collection created successfully");
+			toast.success("Collection created successfully");
 
-      onClose();
-    } catch (error: any) {
-      toast.error(error?.message);
-    }
-  };
+			onClose();
+		} catch (error: any) {
+			toast.error(error?.message);
+		}
+	};
 
-  return (
-    <form onSubmit={handleSubmit(onSubmit)} className="pb-3">
-      <div className="space-y-6">
-        <div>
-          <Input
-            autoFocus
-            label="Name"
-            labelPlacement="outside"
-            isInvalid={!!errors.name}
-            errorMessage={errors.name?.message}
-            placeholder="Enter Collection name"
-            {...register("name")}
-          />
-        </div>
+	return (
+		<form onSubmit={handleSubmit(onSubmit)} className="pb-3">
+			<div className="space-y-6">
+				<div>
+					<Input
+						autoFocus
+						label="Name"
+						labelPlacement="outside"
+						isInvalid={!!errors.name}
+						errorMessage={errors.name?.message}
+						placeholder="Enter Collection name"
+						{...register("name")}
+					/>
+				</div>
 
-        <Divider />
+				<Divider />
 
-        <div className="space-y-1">
-          <div className="text-sm font-bold flex justify-between items-center">
-            Fields
-            <Button
-              size="sm"
-              variant="light"
-              onClick={() => {
-                append({
-                  name: ".*",
-                  type: "auto",
-                  facet: false,
-                });
-              }}
-            >
-              <PlusIcon className="h-5 w-5" />
-            </Button>
-          </div>
-          <div className="space-y-5">
-            {fields.map((field, index) => (
-              <div key={field.id} className="flex gap-2">
-                <div className="flex-1 space-y-1.5">
-                  <div>
-                    <Input
-                      label="Name"
-                      isInvalid={!!errors.fields?.[index]?.name}
-                      errorMessage={errors.fields?.[index]?.name?.message}
-                      {...register(`fields.${index}.name`)}
-                    />
-                  </div>
-                  <div>
-                    <Select
-                      label="Type"
-                      {...register(`fields.${index}.type`)}
-                    >
-                      {FIELDS_TYPES.map((type) => (
-                        <SelectItem key={type} value={type}>
-                          {type}
-                        </SelectItem>
-                      ))}
-                    </Select>
-                  </div>
-                  <Switch
-                    isSelected={getValues(`fields.${index}.facet`)}
-                    onValueChange={(value) => {
-                      update(index, {
-                        ...getValues(`fields.${index}`),
-                        facet: value,
-                      });
-                    }}
-                  >
-                    Facet
-                  </Switch>
-                </div>
+				<div className="space-y-1">
+					<div className="text-sm font-bold flex justify-between items-center">
+						Fields
+						<Button
+							size="sm"
+							variant="light"
+							onClick={() => {
+								append({
+									name: ".*",
+									type: "auto",
+									facet: false,
+								});
+							}}
+						>
+							<PlusIcon className="h-5 w-5" />
+						</Button>
+					</div>
+					<div className="space-y-5">
+						{fields.map((field, index) => (
+							<div key={field.id} className="flex gap-2">
+								<div className="flex-1 space-y-1.5">
+									<div>
+										<Input
+											label="Name"
+											isInvalid={!!errors.fields?.[index]?.name}
+											errorMessage={errors.fields?.[index]?.name?.message}
+											{...register(`fields.${index}.name`)}
+										/>
+									</div>
+									<div>
+										<Select label="Type" {...register(`fields.${index}.type`)}>
+											{FIELDS_TYPES.map((type) => (
+												<SelectItem key={type} value={type}>
+													{type}
+												</SelectItem>
+											))}
+										</Select>
+									</div>
+									<Switch
+										isSelected={getValues(`fields.${index}.facet`)}
+										onValueChange={(value) => {
+											update(index, {
+												...getValues(`fields.${index}`),
+												facet: value,
+											});
+										}}
+									>
+										Facet
+									</Switch>
+								</div>
 
-                <Button
-                  size="sm"
-                  onClick={() => {
-                    remove(index);
-                  }}
-                >
-                  <TrashIcon className="h-5 w-5" />
-                </Button>
-              </div>
-            ))}
-          </div>
-        </div>
+								<Button
+									size="sm"
+									onClick={() => {
+										remove(index);
+									}}
+								>
+									<TrashIcon className="h-5 w-5" />
+								</Button>
+							</div>
+						))}
+					</div>
+				</div>
 
-        <span className="text-sm text-danger-300">
-          {errors.fields?.message}
-        </span>
-      </div>
+				<span className="text-sm text-danger-300">
+					{errors.fields?.message}
+				</span>
+			</div>
 
-      <div className="flex justify-end">
-        <Button
-          type="submit"
-          color="primary"
-          disabled={isSubmitting || !isDirty}
-          className="rounded bg-primary py-2 px-4 text-sm text-white data-[hover]:bg-primary-dark"
-        >
-          Save changes
-        </Button>
-      </div>
-    </form>
-  );
+			<div className="flex justify-end">
+				<Button
+					type="submit"
+					color="primary"
+					disabled={isSubmitting || !isDirty}
+					className="rounded bg-primary py-2 px-4 text-sm text-white data-[hover]:bg-primary-dark"
+				>
+					Save changes
+				</Button>
+			</div>
+		</form>
+	);
 }
 
 export function AddCollection() {
-  const { isOpen, onOpen, onOpenChange, onClose } = useDisclosure();
+	const { isOpen, onOpen, onOpenChange, onClose } = useDisclosure();
 
-  return (
-    <>
-      <Button className="flex gap-2" onClick={onOpen}>
-        <PlusIcon className="h-5 w-5" />
-        <span>Create collection</span>
-      </Button>
-      <Modal size="lg" isOpen={isOpen} onOpenChange={onOpenChange}>
-        <ModalContent>
-          <ModalHeader className="font-bold">Create collection</ModalHeader>
-          <ModalBody>
-            <Form onClose={onClose} />
-          </ModalBody>
-        </ModalContent>
-      </Modal>
-    </>
-  );
+	return (
+		<>
+			<Button className="flex gap-2" onClick={onOpen}>
+				<PlusIcon className="h-5 w-5" />
+				<span>Create collection</span>
+			</Button>
+			<Modal size="lg" isOpen={isOpen} onOpenChange={onOpenChange}>
+				<ModalContent>
+					<ModalHeader className="font-bold">Create collection</ModalHeader>
+					<ModalBody>
+						<Form onClose={onClose} />
+					</ModalBody>
+				</ModalContent>
+			</Modal>
+		</>
+	);
 }

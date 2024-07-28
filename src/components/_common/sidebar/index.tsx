@@ -79,7 +79,7 @@ export function Sidebar({ children }: { readonly children: React.ReactNode }) {
 					} w-full -right-6 transition transform ease-in duration-300 flex items-center justify-between border-4 border-white dark:border-[#0F172A] bg-[#1E293B]  absolute top-2 rounded-full h-12`}
 				>
 					<div className="flex pl-4 items-center space-x-2 ">
-					<ThemeSwitch />
+						<ThemeSwitch />
 					</div>
 					<div className="flex items-center space-x-3 group bg-gradient-to-r dark:from-cyan-500 dark:to-blue-500 from-indigo-500 via-purple-500 to-purple-500  pl-10 pr-2 py-1 rounded-full text-white  ">
 						<div className="transform ease-in-out duration-300 mr-12">
