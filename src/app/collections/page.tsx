@@ -1,6 +1,5 @@
 "use client";
 
-import { Spinner } from "@nextui-org/react";
 import { AddCollection } from "@/components/collections/addCollection";
 import CollectionsList from "@/components/collections/collectionsList";
 import useGetTypesenseCollections from "@/hooks/useGetTypesenseCollections";
@@ -22,13 +21,10 @@ export default function Home() {
 			</div>
 
 			<div className="relative col-span-12">
-				<CollectionsList data={getCollectionsQuery?.data} />
-
-				{getCollectionsQuery?.isFetching && (
-					<div className="absolute top-0 left-0 right-0 bottom-0 flex items-center justify-center">
-						<Spinner />
-					</div>
-				)}
+				<CollectionsList
+					data={getCollectionsQuery?.data}
+					isLoading={getCollectionsQuery?.isFetching}
+				/>
 			</div>
 		</div>
 	);

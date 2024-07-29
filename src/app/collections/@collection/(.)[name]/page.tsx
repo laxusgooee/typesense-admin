@@ -9,12 +9,9 @@ import {
 	useDisclosure,
 	ModalHeader,
 } from "@nextui-org/react";
-import { useParams } from "next/navigation";
 import ViewCollection from "@/components/collections/viewCollection";
 
 export default function Home() {
-	const params = useParams<{ name: string }>();
-
 	const router = useRouter();
 	const { isOpen, onOpenChange } = useDisclosure({
 		defaultOpen: true,
@@ -25,11 +22,11 @@ export default function Home() {
 
 	return (
 		<>
-			<Modal isOpen={isOpen} onOpenChange={onOpenChange}>
+			<Modal size="4xl" isOpen={isOpen} onOpenChange={onOpenChange}>
 				<ModalContent>
 					<ModalHeader className="font-bold">Collection</ModalHeader>
 					<ModalBody>
-						<ViewCollection name={params.name} />
+						<ViewCollection />
 					</ModalBody>
 				</ModalContent>
 			</Modal>

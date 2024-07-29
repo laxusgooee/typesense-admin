@@ -1,6 +1,12 @@
 import { useState } from "react";
 
-const useTypesenseMutation = ({ mutationFn }: { mutationFn: any }) => {
+interface TypesenseeMutationProps<F, T> {
+	mutationFn: (variables: T) => Promise<F>;
+}
+
+const useTypesenseMutation = <F, T>({
+	mutationFn,
+}: TypesenseeMutationProps<F, T>) => {
 	const [data, setData] = useState<any | undefined>(undefined);
 	const [error, setError] = useState<any | undefined>(undefined);
 
@@ -15,11 +21,11 @@ const useTypesenseMutation = ({ mutationFn }: { mutationFn: any }) => {
 	};
 
 	const mutate = async (
-		variables?: any,
+		variables: T,
 		options?: {
-			onSuccess?: (data: any, variables?: any) => void;
-			onError?: (err: any, variables?: any) => void;
-			onSettled?: (data: any, err: any, variables?: any) => void;
+			onSuccess?: (data: F, variables?: T) => void;
+			onError?: (err: any, variables?: T) => void;
+			onSettled?: (data: F, err: any, variables?: T) => void;
 		}
 	) => {
 		setStatus("pending");

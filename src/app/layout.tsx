@@ -22,7 +22,7 @@ export default function RootLayout({
 	return (
 		<html lang="en">
 			<body
-				className={`${inter.className} text-black dark:text-white bg-zinc-100 dark:bg-[#0F172A]`}
+				className={`${inter.className} text-black dark:text-white bg-zinc-100 dark:bg-[#0F172A] min-h-screen`}
 			>
 				<TypesenseProvider>
 					<NextuiProvider>

@@ -10,13 +10,16 @@ import {
 	TableCell,
 	getKeyValue,
 	Button,
+	Spinner,
 } from "@nextui-org/react";
 import Link from "next/link";
 import { CollectionSchema } from "typesense/lib/Typesense/Collection";
 
 export default function CollectionsList({
 	data = [],
+	isLoading,
 }: {
+	isLoading?: boolean;
 	data?: CollectionSchema[];
 }) {
 	const columns = [
@@ -69,7 +72,12 @@ export default function CollectionsList({
 						<TableColumn key={column.key}>{column.label}</TableColumn>
 					)}
 				</TableHeader>
-				<TableBody items={data} emptyContent={"No rows to display."}>
+				<TableBody
+					items={data}
+					isLoading={isLoading}
+					loadingContent={<Spinner />}
+					emptyContent={"No rows to display."}
+				>
 					{(item) => (
 						<TableRow key={item.name}>
 							{(columnKey) => (

@@ -41,9 +41,7 @@ export function AuthenticatedLayout({
 	}, [apiKey, nodes, typesense]);
 
 	useEffect(() => {
-		setLoading(true);
-
-		if (!_hydrated) {
+		if (!_hydrated || !loading) {
 			return;
 		}
 
