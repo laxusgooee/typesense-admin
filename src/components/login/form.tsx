@@ -51,7 +51,7 @@ export function LoginForm() {
 			apiKey: "",
 			nodes: [
 				{
-					host: "185.205.246.174",
+					host: "127.0.0.1",
 					port: 8108,
 					protocol: "http",
 				},

@@ -3,7 +3,7 @@
 import useDeleteTypesenseCollection from "@/hooks/useDeleteTypesenseCollection";
 import useGetTypesenseCollection from "@/hooks/useGetTypesenseCollection";
 import useUpdateTypesenseColllection from "@/hooks/useUpdateTypesenseColllection";
-import { KeyIcon, PencilIcon, TrashIcon } from "@heroicons/react/24/solid";
+import { KeyIcon, TrashIcon } from "@heroicons/react/24/solid";
 import {
 	Table,
 	TableHeader,
@@ -15,6 +15,11 @@ import {
 	Button,
 	Chip,
 	Divider,
+	Modal,
+	ModalContent,
+	ModalHeader,
+	ModalBody,
+	useDisclosure,
 } from "@nextui-org/react";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "react-toastify";
@@ -40,12 +45,15 @@ const columns = [
 
 export default function ViewCollection() {
 	const router = useRouter();
+
 	const params = useParams<{ name: string }>();
 
 	const deleteMutaion = useDeleteTypesenseCollection();
 	const updateMutaion = useUpdateTypesenseColllection();
 
 	const collection = useGetTypesenseCollection(params.name);
+
+	const { isOpen, onOpen, onOpenChange, onClose } = useDisclosure();
 
 	const getKeyCell = (item: any, key: string) => {
 		if (key === "name") {
@@ -62,9 +70,6 @@ export default function ViewCollection() {
 		if (key === "actions") {
 			return (
 				<div className="flex gap-2">
-					<Button isIconOnly size="sm" variant="light">
-						<PencilIcon className="h-5 w-5" />
-					</Button>
 					<Button
 						isIconOnly
 						size="sm"
@@ -74,7 +79,12 @@ export default function ViewCollection() {
 							updateMutaion.mutate({
 								name: params.name,
 								schema: {
-									fields: {},
+									fields: [
+										{
+											name: item.name,
+											drop: true,
+										},
+									],
 								},
 							});
 						}}
@@ -141,18 +151,29 @@ export default function ViewCollection() {
 				</Table>
 			</div>
 
-			<div className="flex gap-2 items-end justify-end">
-				<Button color="primary" onClick={deleteCollection}>
-					Add field
-				</Button>
+			<div className="flex gap-2 items-end justify-between">
+				<div>
+					<Button color="primary" onClick={onOpen}>
+						Add field
+					</Button>
+				</div>
 				<Button
 					color="danger"
 					isLoading={deleteMutaion.isPending}
 					onClick={deleteCollection}
 				>
-					Delete
+					Delete Collection
 				</Button>
 			</div>
+
+			<Modal size="lg" isOpen={isOpen} onOpenChange={onOpenChange}>
+				<ModalContent>
+					<ModalHeader className="font-bold">Add collection fields</ModalHeader>
+					<ModalBody>
+						<div>Coming soon</div>
+					</ModalBody>
+				</ModalContent>
+			</Modal>
 		</div>
 	);
-}
+};

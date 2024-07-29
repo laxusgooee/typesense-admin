@@ -2,6 +2,7 @@
 
 import { PlusIcon, TrashIcon } from "@heroicons/react/24/solid";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { CollectionSchema } from "typesense/lib/Typesense/Collection";
 import { SubmitHandler, useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
 import {
@@ -19,17 +20,7 @@ import {
 } from "@nextui-org/react";
 import { toast } from "react-toastify";
 import useCreateTypesenseCollection from "@/hooks/useCreateTypesenseCollection";
-import { CollectionSchema } from "typesense/lib/Typesense/Collection";
-
-const FIELDS_TYPES = [
-	"string",
-	"int32",
-	"int64",
-	"float",
-	"auto",
-	"bool",
-	"image",
-];
+import { COLLECTIONS_FIELDS_TYPES } from "@/constants";
 
 const NodeSchema = z.object({
 	name: z.string().min(2, { message: "Field name is required" }),
@@ -47,7 +38,7 @@ const CreateCategoryFormSchema = z.object({
 
 type CreateCategoryFormInputs = z.infer<typeof CreateCategoryFormSchema>;
 
-function Form({ onSubmit }: { onSubmit: (e?: any) => void }) {
+function Form({ onSubmit }: { readonly onSubmit: (e?: any) => void }) {
 	const {
 		register,
 		control,
@@ -122,7 +113,7 @@ function Form({ onSubmit }: { onSubmit: (e?: any) => void }) {
 									</div>
 									<div>
 										<Select label="Type" {...register(`fields.${index}.type`)}>
-											{FIELDS_TYPES.map((type) => (
+											{COLLECTIONS_FIELDS_TYPES.map((type) => (
 												<SelectItem key={type} value={type}>
 													{type}
 												</SelectItem>
@@ -177,18 +168,18 @@ function Form({ onSubmit }: { onSubmit: (e?: any) => void }) {
 export function AddCollection({
 	onCollectionCreated,
 }: {
-	onCollectionCreated?: (collection: CollectionSchema) => void;
+	readonly onCollectionCreated?: (collection: CollectionSchema) => void;
 }) {
 	const createCollectionMutation = useCreateTypesenseCollection();
 	const { isOpen, onOpen, onOpenChange, onClose } = useDisclosure();
 
 	const onSubmit: SubmitHandler<CreateCategoryFormInputs> = async (data) => {
-		createCollectionMutation.mutate(data, {
+		createCollectionMutation.mutate(data as CollectionSchema, {
 			onSuccess: (collection) => {
 				toast.success("Collection created successfully");
 
 				if (onCollectionCreated) {
-					onCollectionCreated(collection);
+					onCollectionCreated(collection as CollectionSchema);
 				}
 
 				onClose();
