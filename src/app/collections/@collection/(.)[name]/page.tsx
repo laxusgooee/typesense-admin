@@ -21,8 +21,12 @@ export default function Home() {
 	});
 
 	return (
-		<>
-			<Modal size="4xl" isOpen={isOpen} onOpenChange={onOpenChange}>
+			<Modal
+				size="4xl"
+				scrollBehavior="outside"
+				isOpen={isOpen}
+				onOpenChange={onOpenChange}
+			>
 				<ModalContent>
 					<ModalHeader className="font-bold">Collection</ModalHeader>
 					<ModalBody>
@@ -30,6 +34,5 @@ export default function Home() {
 					</ModalBody>
 				</ModalContent>
 			</Modal>
-		</>
 	);
 }
