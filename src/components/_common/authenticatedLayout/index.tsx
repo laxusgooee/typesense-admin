@@ -31,6 +31,7 @@ export function AuthenticatedLayout({
 			nodes: nodes,
 			apiKey: apiKey as string,
 			connectionTimeoutSeconds: 2,
+			cacheSearchResultsForSeconds: 60,
 		});
 
 		typesense?.setClient(client);

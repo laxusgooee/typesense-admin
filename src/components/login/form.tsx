@@ -76,6 +76,7 @@ export function LoginForm() {
 				nodes: nodes,
 				apiKey: data.apiKey,
 				connectionTimeoutSeconds: 2,
+				cacheSearchResultsForSeconds: 60,
 			});
 
 			await typesense?.setClient(client);

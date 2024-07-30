@@ -21,18 +21,18 @@ export default function Home() {
 	});
 
 	return (
-			<Modal
-				size="4xl"
-				scrollBehavior="outside"
-				isOpen={isOpen}
-				onOpenChange={onOpenChange}
-			>
-				<ModalContent>
-					<ModalHeader className="font-bold">Collection</ModalHeader>
-					<ModalBody>
-						<ViewCollection />
-					</ModalBody>
-				</ModalContent>
-			</Modal>
+		<Modal
+			size="4xl"
+			scrollBehavior="outside"
+			isOpen={isOpen}
+			onOpenChange={onOpenChange}
+		>
+			<ModalContent>
+				<ModalHeader className="font-bold">Collection</ModalHeader>
+				<ModalBody>
+					<ViewCollection />
+				</ModalBody>
+			</ModalContent>
+		</Modal>
 	);
 }

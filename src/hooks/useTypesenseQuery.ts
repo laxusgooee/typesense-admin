@@ -1,13 +1,21 @@
 import { useTypesense } from "@/providers/typesenseProvider";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Client } from "typesense";
 
 interface TypesenseQueryProps<F> {
 	queryFn: (client: Client) => Promise<F>;
+	enabled?: boolean;
+	queryKey?: string[];
 }
 
-const useTypesenseQuery = <F>({ queryFn }: TypesenseQueryProps<F>) => {
+const useTypesenseQuery = <F>({
+	queryFn,
+	enabled = true,
+	queryKey = [],
+}: TypesenseQueryProps<F>) => {
 	const typesense = useTypesense();
+
+	const ref = useRef<string[] | undefined>(undefined);
 
 	const [data, setData] = useState<F | undefined>(undefined);
 	const [error, setError] = useState<any | undefined>(undefined);
@@ -16,12 +24,14 @@ const useTypesenseQuery = <F>({ queryFn }: TypesenseQueryProps<F>) => {
 		"pending"
 	);
 
-	const [fetchStatus, setFetchStatus] = useState<"idle" | "feching" | "paused">(
-		"idle"
-	);
+	const [fetchStatus, setFetchStatus] = useState<
+		"idle" | "fetching" | "paused"
+	>("idle");
 
 	const fetch = async () => {
-		setFetchStatus("feching");
+		ref.current = queryKey;
+
+		setFetchStatus("fetching");
 		try {
 			const res = await queryFn(typesense?.client as Client);
 
@@ -40,20 +50,28 @@ const useTypesenseQuery = <F>({ queryFn }: TypesenseQueryProps<F>) => {
 	};
 
 	useEffect(() => {
-		if (!typesense?.client) {
+		if (!typesense?.client || !enabled) {
 			return;
 		}
 
-		fetch();
-	}, [typesense]);
+		const keyChanged = queryKey?.toString() !== ref.current?.toString();
+
+		if (keyChanged) {
+			console.log("REFRESH", ref.current);
+
+			fetch();
+		}
+	}, [typesense, enabled, queryKey]);
 
 	return {
 		data,
 		error,
+		status,
+		fetchStatus,
 		isPending: status === "pending",
 		isSuccess: status === "success",
 		isError: status === "error",
-		isFetching: fetchStatus === "feching",
+		isFetching: fetchStatus === "fetching",
 		refetch: refetch,
 	};
 };
