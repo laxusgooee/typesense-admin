@@ -1,0 +1,16 @@
+services:
+  typesense-admin:
+    container_name: typesense-admin
+    build:
+      context: ./
+      args:
+        NEXT_PUBLIC_APP_NAME: ${NEXT_PUBLIC_APP_NAME:-Typesense Admin}
+    restart: always
+    ports:
+      - 8188:8188
+    networks:
+      - typesense-admin
+
+
+networks:
+  typesense-admin:

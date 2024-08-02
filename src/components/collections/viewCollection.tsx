@@ -31,7 +31,6 @@ import { useParams, useRouter } from "next/navigation";
 import { useFieldArray, useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 import {
-	CollectionDropFieldSchema,
 	CollectionFieldSchema,
 } from "typesense/lib/Typesense/Collection";
 import { z } from "zod";
