@@ -1,17 +1,16 @@
 import React from "react";
-import { AuthenticatedLayout } from "@/components/_common/authenticatedLayout";
 
 export default function Layout({
 	collection,
 	children,
-}: {
+}: Readonly<{
 	collection: React.ReactNode;
 	children: React.ReactNode;
-}) {
+}>) {
 	return (
-		<AuthenticatedLayout>
+		<>
 			{collection}
 			{children}
-		</AuthenticatedLayout>
+		</>
 	);
 }

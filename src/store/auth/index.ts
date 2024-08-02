@@ -16,9 +16,10 @@ export interface AuthState {
 }
 
 interface AuthActions {
-	setApiKey: (apiKey: string) => void;
 	addNode: (node: Node) => void;
 	removeNode: (node: Node) => void;
+	setApiKey: (apiKey: string | null) => void;
+	deactivate: () => void;
 }
 
 export const useAuthStore = create<AuthState & AuthActions>()(
@@ -27,7 +28,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
 			(set) => ({
 				nodes: [],
 				apiKey: null,
-				setApiKey: (apiKey: string) => set(() => ({ apiKey })),
+				setApiKey: (apiKey: string | null) => set(() => ({ apiKey })),
 				addNode: (node: Node) =>
 					set((prevState) => {
 						const index = prevState.nodes.findIndex(
@@ -49,6 +50,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
 						prevState.nodes.splice(index, 1);
 						return { nodes: prevState.nodes };
 					}),
+				deactivate: () => set({ apiKey: null, nodes: [] }),
 				_hydrated: false,
 			}),
 			{

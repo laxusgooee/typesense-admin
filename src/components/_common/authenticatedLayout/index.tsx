@@ -1,68 +1,105 @@
 "use client";
 
 import Typesense from "typesense";
-import { useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
+import {
+	Modal,
+	ModalContent,
+	ModalBody,
+	useDisclosure,
+	ModalHeader,
+	Spinner,
+} from "@nextui-org/react";
 import { useTypesense } from "@/providers/typesenseProvider";
-import { AuthState, useAuthStore } from "@/store/auth";
+import { useAuthStore } from "@/store/auth";
 
-import { Sidebar } from "../sidebar";
+import { LoginForm } from "@/components/_common/login";
+import { Sidebar } from "@/components/_common/sidebar";
 
 export function AuthenticatedLayout({
 	children,
 }: {
 	readonly children: React.ReactNode;
 }) {
-	const router = useRouter();
 	const typesense = useTypesense();
-	const { _hydrated, apiKey, nodes } = useAuthStore(
-		(state) => state as AuthState
+
+	const { _hydrated, apiKey, nodes, setApiKey } = useAuthStore(
+		(state) => state
 	);
 
 	const [loading, setLoading] = useState(true);
+	const [authenticated, setAuthenticated] = useState(false);
 
-	const checkClient = useCallback(async () => {
-		const res = await typesense?.client?.health.retrieve();
-		if (res?.ok) {
-			return setLoading(false);
+	const { isOpen, onOpenChange, onOpen, onClose } = useDisclosure({});
+
+	async function setTypesenseClient() {
+		try {
+			const client = new Typesense.Client({
+				nodes,
+				apiKey: apiKey!,
+				connectionTimeoutSeconds: 2,
+			});
+
+			await typesense!.setClient(client);
+
+			onClose();
+
+			setAuthenticated(true);
+		} catch (error: any) {
+			setApiKey(null);
+			setAuthenticated(false);
+
+			toast.error(error?.message ?? "Something went wrong");
+		} finally {
+			setLoading(false);
 		}
-
-		const client = new Typesense.Client({
-			nodes: nodes,
-			apiKey: apiKey as string,
-			connectionTimeoutSeconds: 2,
-			cacheSearchResultsForSeconds: 60,
-		});
-
-		typesense?.setClient(client);
-
-		// todo: check health
-
-		return setLoading(false);
-	}, [apiKey, nodes, typesense]);
+	}
 
 	useEffect(() => {
-		if (!_hydrated || !loading) {
+		if (!_hydrated) {
 			return;
 		}
 
 		if (!apiKey) {
-			router.push("/login");
+			setAuthenticated(false);
+			setLoading(false);
 
-			return setLoading(false);
+			onOpen();
+			return;
 		}
 
-		checkClient();
-	}, [_hydrated, apiKey, router, checkClient]);
+		setTypesenseClient();
+
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [_hydrated, apiKey]);
 
 	return (
 		<Sidebar>
 			{loading && (
 				<div className="flex min-h-screen items-center justify-center">
-					<p>Loading...</p>
+					<Spinner />
 				</div>
 			)}
-			{_hydrated && children}
+
+			{authenticated && children}
+
+			<Modal
+				size="xl"
+				isOpen={isOpen}
+				hideCloseButton
+				isDismissable={false}
+				onOpenChange={onOpenChange}
+			>
+				<ModalContent>
+					<ModalHeader className="font-bold">
+						Sign in to your instance
+					</ModalHeader>
+					<ModalBody className="pb-5">
+						<LoginForm />
+					</ModalBody>
+				</ModalContent>
+			</Modal>
 		</Sidebar>
 	);
 }

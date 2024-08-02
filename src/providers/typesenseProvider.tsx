@@ -1,7 +1,7 @@
 "use client";
 
 import { Client } from "typesense";
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useMemo, useState } from "react";
 
 interface ITypesenseContext {
 	client: Client | null;
@@ -29,13 +29,16 @@ export const TypesenseProvider = ({
 		setClient(client);
 	};
 
+	const obj = useMemo(
+		() => ({
+			client: client,
+			setClient: checkClientBeforeSet,
+		}),
+		[client]
+	);
+
 	return (
-		<TypesenseContext.Provider
-			value={{
-				client: client,
-				setClient: checkClientBeforeSet,
-			}}
-		>
+		<TypesenseContext.Provider value={obj}>
 			{children}
 		</TypesenseContext.Provider>
 	);

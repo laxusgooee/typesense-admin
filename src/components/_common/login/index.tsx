@@ -1,11 +1,8 @@
 "use client";
 
-import Typesense from "typesense";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { SubmitHandler, useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
-import { useTypesense } from "@/providers/typesenseProvider";
-import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/auth";
 import { Input } from "@nextui-org/input";
 import { Button } from "@nextui-org/react";
@@ -34,9 +31,6 @@ const LoginFormSchema = z.object({
 type LoginFormInputs = z.infer<typeof LoginFormSchema>;
 
 export function LoginForm() {
-	const router = useRouter();
-	const typesense = useTypesense();
-
 	const { addNode, setApiKey } = useAuthStore();
 
 	const {
@@ -67,19 +61,10 @@ export function LoginForm() {
 	const onSubmit: SubmitHandler<LoginFormInputs> = async (data) => {
 		try {
 			const nodes = data.nodes.map((node) => ({
-				host: node.host!,
-				port: node.port!,
-				protocol: node.protocol!,
+				host: node.host,
+				port: node.port,
+				protocol: node.protocol,
 			}));
-
-			const client = new Typesense.Client({
-				nodes: nodes,
-				apiKey: data.apiKey,
-				connectionTimeoutSeconds: 2,
-				cacheSearchResultsForSeconds: 60,
-			});
-
-			await typesense?.setClient(client);
 
 			nodes.forEach((node) => {
 				addNode({
@@ -90,15 +75,13 @@ export function LoginForm() {
 			});
 
 			setApiKey(data.apiKey);
-
-			router.push("/");
 		} catch (error: any) {
 			toast.error(error?.message ?? "Something went wrong");
 		}
 	};
 
 	return (
-		<div className="flex flex-1 flex-col justify-center px-5">
+		<div className="flex flex-1 flex-col justify-center">
 			<form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
 				<div className="space-y-6">
 					<div>
@@ -115,7 +98,7 @@ export function LoginForm() {
 
 					<div className="space-y-2">
 						<div className="flex items-center justify-between gap-2">
-							<label className="text-sm font-medium leading-6">Nodes:</label>
+							<span className="text-sm font-medium leading-6">Nodes:</span>
 							<Button
 								type="button"
 								isIconOnly

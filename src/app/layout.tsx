@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import { TypesenseProvider } from "@/providers/typesenseProvider";
 import { NextuiProvider } from "@/providers/nextuiProvider";
 import { ToastProvider } from "@/providers/toastProvider";
+import { TypesenseProvider } from "@/providers/typesenseProvider";
+import { AuthenticatedLayout } from "@/components/_common/authenticatedLayout";
 
 import "./globals.css";
 
@@ -25,9 +26,11 @@ export default function RootLayout({
 				className={`${inter.className} text-black dark:text-white bg-zinc-100 dark:bg-[#0F172A] min-h-screen`}
 			>
 				<TypesenseProvider>
-					<NextuiProvider>
-						<ToastProvider>{children}</ToastProvider>
-					</NextuiProvider>
+					<ToastProvider>
+						<NextuiProvider>
+							<AuthenticatedLayout>{children}</AuthenticatedLayout>
+						</NextuiProvider>
+					</ToastProvider>
 				</TypesenseProvider>
 			</body>
 		</html>

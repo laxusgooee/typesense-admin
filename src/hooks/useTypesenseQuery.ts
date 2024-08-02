@@ -2,23 +2,23 @@ import { useTypesense } from "@/providers/typesenseProvider";
 import { useState, useEffect, useRef } from "react";
 import { Client } from "typesense";
 
-interface TypesenseQueryProps<F> {
+interface TypesenseQueryProps<F, _E = undefined> {
 	queryFn: (client: Client) => Promise<F>;
 	enabled?: boolean;
 	queryKey?: string[];
 }
 
-const useTypesenseQuery = <F>({
+const useTypesenseQuery = <F, E = undefined>({
 	queryFn,
 	enabled = true,
 	queryKey = [],
-}: TypesenseQueryProps<F>) => {
+}: TypesenseQueryProps<F, E>) => {
 	const typesense = useTypesense();
 
 	const ref = useRef<string[] | undefined>(undefined);
 
 	const [data, setData] = useState<F | undefined>(undefined);
-	const [error, setError] = useState<any | undefined>(undefined);
+	const [error, setError] = useState<E | undefined>(undefined);
 
 	const [status, setStatus] = useState<"pending" | "success" | "error">(
 		"pending"
@@ -38,7 +38,7 @@ const useTypesenseQuery = <F>({
 			setData(res);
 			setStatus("success");
 		} catch (error) {
-			setError(error);
+			setError(error as E);
 			setStatus("error");
 		} finally {
 			setFetchStatus("idle");
@@ -61,6 +61,7 @@ const useTypesenseQuery = <F>({
 
 			fetch();
 		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [typesense, enabled, queryKey]);
 
 	return {
