@@ -1,63 +1,105 @@
-'use client'
- 
+"use client";
+
 import Typesense from "typesense";
-import { useCallback, useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useTypesense } from '@/providers/typesenseProvider';
-import { AuthState, useAuthStore } from '@/store/auth';
- 
-export function AuthenticatedLayout({ children }: { readonly children : React.ReactNode }) {
-  const router = useRouter();
-  const typesense = useTypesense();
-  const {_hydrated, apiKey, nodes} = useAuthStore((state) => state as AuthState);
+import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
+import {
+	Modal,
+	ModalContent,
+	ModalBody,
+	useDisclosure,
+	ModalHeader,
+	Spinner,
+} from "@nextui-org/react";
+import { useTypesense } from "@/providers/typesenseProvider";
+import { useAuthStore } from "@/store/auth";
 
-  const [loading, setLoading] = useState(true);
-  
+import { LoginForm } from "@/components/_common/login";
+import { Sidebar } from "@/components/_common/sidebar";
 
-    const checkClient = useCallback(async () => {
-        const res = await typesense?.client?.health.retrieve();
-        if (res?.ok) {
-            return setLoading(false);
-        }
-        
-        const client = new Typesense.Client({
-            'nodes': nodes,
-            'apiKey': apiKey as string,
-            'connectionTimeoutSeconds': 2
-        });
+export function AuthenticatedLayout({
+	children,
+}: {
+	readonly children: React.ReactNode;
+}) {
+	const typesense = useTypesense();
 
-        typesense?.setClient(client);
+	const { _hydrated, apiKey, nodes, setApiKey } = useAuthStore(
+		(state) => state
+	);
 
-        // todo: check health
+	const [loading, setLoading] = useState(true);
+	const [authenticated, setAuthenticated] = useState(false);
 
-        return setLoading(false);
-    }, [apiKey, nodes, typesense]);
+	const { isOpen, onOpenChange, onOpen, onClose } = useDisclosure({});
 
-  useEffect(() => {
-    setLoading(true);
+	async function setTypesenseClient() {
+		try {
+			const client = new Typesense.Client({
+				nodes,
+				apiKey: apiKey!,
+				connectionTimeoutSeconds: 2,
+			});
 
-    if (!_hydrated) {
-      return;
-    }
+			await typesense!.setClient(client);
 
-    if (!apiKey) {
-        router.push("/login");
+			onClose();
 
-        return setLoading(false);
-    }
+			setAuthenticated(true);
+		} catch (error: any) {
+			setApiKey(null);
+			setAuthenticated(false);
 
-    checkClient();
-    
-  }, [_hydrated, apiKey, router, checkClient]);
- 
-  return (
-    <>
-        {loading && (
-            <div className="flex min-h-screen items-center justify-center">
-                <p>Loading...</p>
-            </div>
-        )}
-        {_hydrated && children}
-    </>
-  )
+			toast.error(error?.message ?? "Something went wrong");
+		} finally {
+			setLoading(false);
+		}
+	}
+
+	useEffect(() => {
+		if (!_hydrated) {
+			return;
+		}
+
+		if (!apiKey) {
+			setAuthenticated(false);
+			setLoading(false);
+
+			onOpen();
+			return;
+		}
+
+		setTypesenseClient();
+
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [_hydrated, apiKey]);
+
+	return (
+		<Sidebar>
+			{loading && (
+				<div className="flex min-h-screen items-center justify-center">
+					<Spinner />
+				</div>
+			)}
+
+			{authenticated && children}
+
+			<Modal
+				size="xl"
+				isOpen={isOpen}
+				hideCloseButton
+				isDismissable={false}
+				onOpenChange={onOpenChange}
+			>
+				<ModalContent>
+					<ModalHeader className="font-bold">
+						Sign in to your instance
+					</ModalHeader>
+					<ModalBody className="pb-5">
+						<LoginForm />
+					</ModalBody>
+				</ModalContent>
+			</Modal>
+		</Sidebar>
+	);
 }
