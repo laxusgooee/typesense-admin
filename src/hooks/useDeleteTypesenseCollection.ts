@@ -1,12 +1,10 @@
-import { useTypesense } from "@/providers/typesenseProvider";
 import useTypesenseMutation from "./useTypesenseMutation";
 
 const useDeleteTypesenseCollection = () => {
-	const typesense = useTypesense();
 
 	return useTypesenseMutation({
-		mutationFn: async (data: string) => {
-			return await typesense?.client?.collections(data).delete();
+		mutationFn: async (client,data: string) => {
+			return await client?.collections(data).delete();
 		},
 	});
 };

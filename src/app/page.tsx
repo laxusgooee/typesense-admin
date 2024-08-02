@@ -6,21 +6,47 @@ import {
 	ClockIcon,
 	MagnifyingGlassIcon,
 } from "@heroicons/react/24/outline";
-import { Select, SelectItem } from "@nextui-org/react";
+import { toast } from "react-toastify";
 import useSearchTypesenseDocuments from "@/hooks/useSearchTypesenseDocuments";
 import SearchBar from "@/components/home/searchBar";
 import Documents from "@/components/home/documents";
+import useDeleteTypesenseDocuments from "@/hooks/useDeleteTypesenseDocuments";
+import Actions from "@/components/home/actions";
 
 export default function Home() {
+	const deleteDocumentsMutation = useDeleteTypesenseDocuments();
+
 	const [query, setQuery] = useState({
 		collection: "",
 		query: {
 			q: "",
 			query_by: "",
+			sort_by: "",
 		},
 	});
 
-	const documents = useSearchTypesenseDocuments(query.collection, query.query);
+	const [selectedDocuments, setSelectedDocuments] = useState<string[]>([]);
+
+	const getDocumentsQuery = useSearchTypesenseDocuments(
+		query.collection,
+		query.query
+	);
+
+	const deleteDocuments = async () => {
+		try {
+			await deleteDocumentsMutation.mutate({
+				collection: query.collection,
+				ids: selectedDocuments,
+			});
+
+			getDocumentsQuery.refetch();
+
+			toast.success("Documents deleted successfully, it may take a few seconds to reflect");
+			
+		} catch (error: any) {
+			toast.error(error.message);
+		}
+	}
 
 	return (
 		<div className="flex flex-col gap-5">
@@ -31,6 +57,7 @@ export default function Home() {
 						query: {
 							q: query,
 							query_by: queryBy.join(","),
+							sort_by: "",
 						},
 					});
 				}}
@@ -44,7 +71,7 @@ export default function Home() {
 							Hits
 						</span>
 						<h1 className="text-2xl font-bold text-primary">
-							{documents.data?.found ?? 0}
+							{getDocumentsQuery.data?.found ?? 0}
 						</h1>
 					</div>
 
@@ -54,7 +81,7 @@ export default function Home() {
 							Total
 						</span>
 						<h1 className="text-2xl font-bold text-primary">
-							{documents.data?.out_of ?? 0}
+							{getDocumentsQuery.data?.out_of ?? 0}
 						</h1>
 					</div>
 
@@ -64,29 +91,31 @@ export default function Home() {
 							Time spent
 						</span>
 						<h1 className="text-2xl font-bold text-primary">
-							{documents.data?.search_time_ms ?? 0}
+							{getDocumentsQuery.data?.search_time_ms ?? 0}
 							<span className="text-sm">ms</span>
 						</h1>
 					</div>
 				</div>
 
-				<div>
-					<Select
-						label="Select an animal"
-						labelPlacement="outside"
-						className="max-w-xs w-48"
-						defaultSelectedKeys={[""]}
-					>
-						{[].map((animal: any) => (
-							<SelectItem key={animal.value}>{animal.label}</SelectItem>
-						))}
-					</Select>
-				</div>
+				<Actions
+					documents={selectedDocuments}
+					onDelete={deleteDocuments}
+				/>
 			</div>
 
 			<Documents
-				documents={documents?.data}
-				isLoading={documents?.isFetching}
+				documents={getDocumentsQuery?.data}
+				isLoading={getDocumentsQuery?.isFetching}
+				onSelectionChange={setSelectedDocuments}
+				onSortChange={(sortDescriptor) => {
+					setQuery({
+						collection: query.collection,
+						query: {
+							...query.query,
+							sort_by: `${sortDescriptor.column}:${sortDescriptor.direction === "ascending" ? "asc" : "desc"}`,
+						},
+					});
+				}}
 			/>
 		</div>
 	);

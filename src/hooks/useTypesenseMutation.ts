@@ -1,12 +1,16 @@
 import { useState } from "react";
+import { Client } from "typesense";
+import { useTypesense } from "@/providers/typesenseProvider";
 
 interface TypesenseeMutationProps<F, T> {
-	mutationFn: (variables: T) => Promise<F>;
+	mutationFn: (client: Client | null | undefined, variables: T) => Promise<F>;
 }
 
 const useTypesenseMutation = <F, T>({
 	mutationFn,
 }: TypesenseeMutationProps<F, T>) => {
+	const typesense = useTypesense();
+
 	const [data, setData] = useState<any | undefined>(undefined);
 	const [error, setError] = useState<any | undefined>(undefined);
 
@@ -34,7 +38,7 @@ const useTypesenseMutation = <F, T>({
 		let err: any;
 
 		try {
-			res = await mutationFn(variables);
+			res = await mutationFn(typesense?.client, variables);
 
 			if (options?.onSuccess) {
 				options.onSuccess(res, variables);

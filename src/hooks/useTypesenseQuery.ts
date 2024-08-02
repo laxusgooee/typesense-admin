@@ -46,6 +46,7 @@ const useTypesenseQuery = <F, E = undefined>({
 	};
 
 	const refetch = async () => {
+		console.log("REFETCH", ref.current);
 		fetch();
 	};
 

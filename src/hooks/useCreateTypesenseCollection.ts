@@ -1,13 +1,10 @@
-import { useTypesense } from "@/providers/typesenseProvider";
 import { CollectionCreateSchema } from "typesense/lib/Typesense/Collections";
 import useTypesenseMutation from "./useTypesenseMutation";
 
 const useCreateTypesenseCollection = () => {
-	const typesense = useTypesense();
-
 	return useTypesenseMutation({
-		mutationFn: async (data: CollectionCreateSchema) => {
-			return await typesense?.client?.collections().create(data);
+		mutationFn: async (client, data: CollectionCreateSchema) => {
+			return await client?.collections().create(data);
 		},
 	});
 };

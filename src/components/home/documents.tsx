@@ -12,8 +12,9 @@ import {
 	getKeyValue,
 	Pagination,
 	Spinner,
+	SortDescriptor,
 } from "@nextui-org/react";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { SearchResponse } from "typesense/lib/Typesense/Documents";
 
 const columns = [
@@ -25,10 +26,17 @@ const columns = [
 export default function Documents({
 	documents,
 	isLoading,
+	onSortChange,
+	onSelectionChange,
 }: {
 	documents?: SearchResponse<any>;
 	isLoading?: boolean;
+	onSelectionChange?: (selectedDocuments: string[]) => void;
+	onSortChange?: (sortDescriptor: SortDescriptor) => void;
 }) {
+	const [sortDescriptor, setSortDescriptor] = useState<SortDescriptor>({});
+    const [selectedDocuments, setSelectedDocuments] = useState<Set<any> | 'all'>(new Set([]));
+
 	const data = useMemo(() => {
 		return documents?.hits ?? [];
 	}, [documents?.hits]);
@@ -45,17 +53,33 @@ export default function Documents({
 		return Math.ceil((documents?.out_of ?? 1) / perPage);
 	}, [documents?.out_of, perPage]);
 
+	useEffect(() => {
+		setSelectedDocuments(new Set([]));
+	}, [documents?.hits]);
+
+    useEffect(() => {
+		if (onSelectionChange) {
+            if (selectedDocuments === 'all') {
+                onSelectionChange(data.map((hit) => hit.document?.id));
+            } else {
+                onSelectionChange(Array.from(selectedDocuments));
+            }
+        }
+	}, [selectedDocuments]);
+
+	useEffect(() => {
+		if (onSortChange) onSortChange(sortDescriptor);
+	}, [sortDescriptor]);
+
 	return (
 		<div className="bg-white dark:bg-zinc-900 p-4 rounded-xl">
 			<Table
 				removeWrapper
 				aria-label="documents"
 				selectionMode="multiple"
-				sortDescriptor={{
-					column: "position",
-					direction: "descending",
-				}}
-				onSortChange={(e) => console.log("sort changed", e)}
+				sortDescriptor={sortDescriptor}
+				onSortChange={setSortDescriptor}
+				onSelectionChange={setSelectedDocuments as any}
 				bottomContent={
 					<div className="flex justify-between gap-2">
 						<div>
