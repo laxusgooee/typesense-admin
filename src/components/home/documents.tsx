@@ -35,7 +35,9 @@ export default function Documents({
 	onSortChange?: (sortDescriptor: SortDescriptor) => void;
 }) {
 	const [sortDescriptor, setSortDescriptor] = useState<SortDescriptor>({});
-    const [selectedDocuments, setSelectedDocuments] = useState<Set<any> | 'all'>(new Set([]));
+	const [selectedDocuments, setSelectedDocuments] = useState<Set<any> | "all">(
+		new Set([])
+	);
 
 	const data = useMemo(() => {
 		return documents?.hits ?? [];
@@ -57,14 +59,14 @@ export default function Documents({
 		setSelectedDocuments(new Set([]));
 	}, [documents?.hits]);
 
-    useEffect(() => {
+	useEffect(() => {
 		if (onSelectionChange) {
-            if (selectedDocuments === 'all') {
-                onSelectionChange(data.map((hit) => hit.document?.id));
-            } else {
-                onSelectionChange(Array.from(selectedDocuments));
-            }
-        }
+			if (selectedDocuments === "all") {
+				onSelectionChange(data.map((hit) => hit.document?.id));
+			} else {
+				onSelectionChange(Array.from(selectedDocuments));
+			}
+		}
 	}, [selectedDocuments]);
 
 	useEffect(() => {

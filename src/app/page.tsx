@@ -41,12 +41,13 @@ export default function Home() {
 
 			getDocumentsQuery.refetch();
 
-			toast.success("Documents deleted successfully, it may take a few seconds to reflect");
-			
+			toast.success(
+				"Documents deleted successfully, it may take a few seconds to reflect"
+			);
 		} catch (error: any) {
 			toast.error(error.message);
 		}
-	}
+	};
 
 	return (
 		<div className="flex flex-col gap-5">
@@ -97,10 +98,7 @@ export default function Home() {
 					</div>
 				</div>
 
-				<Actions
-					documents={selectedDocuments}
-					onDelete={deleteDocuments}
-				/>
+				<Actions documents={selectedDocuments} onDelete={deleteDocuments} />
 			</div>
 
 			<Documents
