@@ -1,21 +1,18 @@
+import {  NodeConfiguration } from "typesense/lib/Typesense/Configuration";
 import { create } from "zustand";
 import { devtools, persist } from "zustand/middleware";
 
-type Node = {
-	host: string;
-	port: number;
-	protocol: string;
-	path?: string;
-	url?: string;
-};
+export type NodeType = "host" | "url";
 
+export type Node =  NodeConfiguration;
 export interface AuthState {
 	apiKey: string | null;
 	nodes: Node[];
+	nodeType: NodeType;
 	_hydrated?: boolean;
 }
-
-interface AuthActions {
+export interface AuthActions {
+	setNodeType: (nodeType: NodeType) => void;
 	addNode: (node: Node) => void;
 	removeNode: (node: Node) => void;
 	setApiKey: (apiKey: string | null) => void;
@@ -28,6 +25,8 @@ export const useAuthStore = create<AuthState & AuthActions>()(
 			(set) => ({
 				nodes: [],
 				apiKey: null,
+				nodeType: "host",
+				setNodeType: (nodeType: NodeType) => set(() => ({ nodeType })),
 				setApiKey: (apiKey: string | null) => set(() => ({ apiKey })),
 				addNode: (node: Node) =>
 					set((prevState) => {
@@ -50,7 +49,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
 						prevState.nodes.splice(index, 1);
 						return { nodes: prevState.nodes };
 					}),
-				deactivate: () => set({ apiKey: null, nodes: [] }),
+				deactivate: () => set({ apiKey: null, nodeType: 'host', nodes: [] }),
 				_hydrated: false,
 			}),
 			{

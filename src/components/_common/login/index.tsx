@@ -3,18 +3,25 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { SubmitHandler, useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
-import { useAuthStore } from "@/store/auth";
+import { NodeType, useAuthStore } from "@/store/auth";
 import { Input } from "@nextui-org/input";
-import { Button } from "@nextui-org/react";
+import {
+	Button,
+	Dropdown,
+	DropdownItem,
+	DropdownMenu,
+	DropdownTrigger,
+} from "@nextui-org/react";
 import { PlusIcon, TrashIcon } from "@heroicons/react/24/solid";
 import { toast } from "react-toastify";
 
 const NodeSchema = z.object({
-	host: z
-		.string()
-		.min(2, { message: "Host is required" })
-		.ip({ version: "v4" }),
-	port: z.number().min(2, { message: "Port is required" }).int(),
+	host: z.union([
+		z.string().min(2, { message: "Host is required" }),
+		z.string().url(),
+	]),
+	port: z.number({ coerce: true }),
+	path: z.string().optional(),
 	protocol: z
 		.string()
 		.min(4, { message: "Protocol is required" })
@@ -25,54 +32,69 @@ const LoginFormSchema = z.object({
 	apiKey: z
 		.string({ required_error: "API KEY is required" })
 		.min(1, { message: "API KEY is required" }),
+	type: z.enum(["host", "url"]),
 	nodes: z.array(NodeSchema).min(1, { message: "Node is required" }),
 });
 
 type LoginFormInputs = z.infer<typeof LoginFormSchema>;
 
 export function LoginForm() {
-	const { addNode, setApiKey } = useAuthStore();
+	const {
+		apiKey,
+		addNode,
+		setApiKey,
+		setNodeType,
+		deactivate,
+		nodeType = "host",
+		nodes: nodesState = [
+			{
+				host: "127.0.0.1",
+				port: 8108,
+				protocol: "http",
+			},
+		],
+	} = useAuthStore();
 
 	const {
 		control,
 		register,
 		handleSubmit,
+		setValue,
+		getValues,
+		watch,
 		formState: { errors, isSubmitting, isDirty },
 	} = useForm<LoginFormInputs>({
 		resolver: zodResolver(LoginFormSchema),
 		mode: "onBlur",
 		values: {
-			apiKey: "",
-			nodes: [
-				{
-					host: "127.0.0.1",
-					port: 8108,
-					protocol: "http",
-				},
-			],
+			apiKey: apiKey ?? "",
+			type: nodeType,
+			nodes: nodesState,
 		},
 	});
+
+	watch('type');
 
 	const { fields, append, remove } = useFieldArray({
 		control,
 		name: "nodes",
 	});
 
+	const showNodePort = getValues('type') === "host";
+
 	const onSubmit: SubmitHandler<LoginFormInputs> = async (data) => {
 		try {
-			const nodes = data.nodes.map((node) => ({
-				host: node.host,
-				port: node.port,
-				protocol: node.protocol,
-			}));
+			deactivate();
 
-			nodes.forEach((node) => {
+			data.nodes.forEach((node) => {
 				addNode({
 					host: node.host,
 					port: node.port,
 					protocol: node.protocol,
 				});
 			});
+
+			setNodeType(data.type);
 
 			setApiKey(data.apiKey);
 		} catch (error: any) {
@@ -98,7 +120,31 @@ export function LoginForm() {
 
 					<div className="space-y-2">
 						<div className="flex items-center justify-between gap-2">
-							<span className="text-sm font-medium leading-6">Nodes:</span>
+							<div className="flex items-center">
+								<span className="text-sm font-medium leading-6">Nodes:</span>
+								<Dropdown>
+									<DropdownTrigger>
+										<Button
+											variant="light"
+											color="primary"
+											className="px-1 py-1"
+										>
+											{showNodePort ? "With Hostname" : "With Url"}
+										</Button>
+									</DropdownTrigger>
+									<DropdownMenu
+										aria-label="select node mode"
+										variant="light"
+										selectionMode="single"
+										disallowEmptySelection
+										selectedKeys={[getValues('type')]}
+										onSelectionChange={(keys) => setValue('type', keys.anchorKey as NodeType)}
+									>
+										<DropdownItem key="host">With Hostname</DropdownItem>
+										<DropdownItem key="url">With Url</DropdownItem>
+									</DropdownMenu>
+								</Dropdown>
+							</div>
 							<Button
 								type="button"
 								isIconOnly
@@ -117,7 +163,7 @@ export function LoginForm() {
 
 						<div className="space-y-3">
 							{fields.map((field, index) => (
-								<div key={field.id} className="grid grid-cols-5 gap-2">
+								<div key={field.id} className="grid grid-cols-5 gap-2 items-start">
 									<div className="col-span-5 md:col-span-3">
 										<Input
 											placeholder="Enter Host"
@@ -127,12 +173,14 @@ export function LoginForm() {
 										/>
 									</div>
 									<div className="flex gap-2 items-center col-span-5 md:col-span-2">
-										<Input
-											placeholder="Enter Port"
-											isInvalid={!!errors.nodes?.[index]?.port}
-											errorMessage={errors.nodes?.[index]?.port?.message}
-											{...register(`nodes.${index}.port`)}
-										/>
+										{showNodePort && (
+											<Input
+												placeholder="Enter Port"
+												isInvalid={!!errors.nodes?.[index]?.port}
+												errorMessage={errors.nodes?.[index]?.port?.message}
+												{...register(`nodes.${index}.port`)}
+											/>
+										)}
 										<Input
 											placeholder="Enter Protocol"
 											isInvalid={!!errors.nodes?.[index]?.protocol}

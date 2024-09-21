@@ -12,7 +12,7 @@ import {
 	Spinner,
 } from "@nextui-org/react";
 import { useTypesense } from "@/providers/typesenseProvider";
-import { useAuthStore } from "@/store/auth";
+import { Node, useAuthStore } from "@/store/auth";
 
 import { LoginForm } from "@/components/_common/login";
 import { Sidebar } from "@/components/_common/sidebar";
@@ -24,7 +24,7 @@ export function AuthenticatedLayout({
 }) {
 	const typesense = useTypesense();
 
-	const { _hydrated, apiKey, nodes, setApiKey } = useAuthStore(
+	const { _hydrated, apiKey, nodes, nodeType, setApiKey } = useAuthStore(
 		(state) => state
 	);
 
@@ -36,7 +36,13 @@ export function AuthenticatedLayout({
 	async function setTypesenseClient() {
 		try {
 			const client = new Typesense.Client({
-				nodes,
+				nodes: nodes.map(node => {
+					if (nodeType === "url") {
+						return ({url: `${node.protocol}://${node.host}`}) as Node;
+					}
+	
+					return node;
+				}),
 				apiKey: apiKey!,
 				connectionTimeoutSeconds: 2,
 			});

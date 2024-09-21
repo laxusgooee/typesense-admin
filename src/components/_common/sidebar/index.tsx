@@ -46,7 +46,7 @@ const SidebarItem = ({
 };
 
 const KeyItem = () => {
-	const { deactivate } = useAuthStore((state) => state);
+	const { nodes, deactivate } = useAuthStore((state) => state);
 
 	return (
 		<Dropdown>
@@ -71,7 +71,7 @@ const KeyItem = () => {
 				>
 					<div className="flex justify-between gap-2">
 						Nodes
-						<Chip size="sm">2</Chip>
+						<Chip size="sm">{nodes.length}</Chip>
 					</div>
 				</DropdownItem>
 				<DropdownSection>
