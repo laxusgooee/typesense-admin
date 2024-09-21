@@ -65,7 +65,8 @@ export default function SearchBar({
 		if (onChange && collection && queryBy.size > 0) {
 			onChange(seletedCollection!, query, Array.from(queryBy));
 		}
-	}, [collection, query, queryBy]);
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [query, queryBy]);
 
 	return (
 		<div className="relative bg-white dark:bg-zinc-900 rounded-lg p-4 space-y-2">

@@ -12,12 +12,20 @@ import SearchBar from "@/components/home/searchBar";
 import Documents from "@/components/home/documents";
 import useDeleteTypesenseDocuments from "@/hooks/useDeleteTypesenseDocuments";
 import Actions from "@/components/home/actions";
+import { CollectionSchema } from "typesense/lib/Typesense/Collection";
 
 export default function Home() {
 	const deleteDocumentsMutation = useDeleteTypesenseDocuments();
 
-	const [query, setQuery] = useState({
-		collection: "",
+	const [query, setQuery] = useState<{
+		collection?: CollectionSchema;
+		query: {
+			q: string;
+			query_by: string;
+			sort_by: string;
+		};
+	}>({
+		collection: undefined,
 		query: {
 			q: "",
 			query_by: "",
@@ -28,14 +36,14 @@ export default function Home() {
 	const [selectedDocuments, setSelectedDocuments] = useState<string[]>([]);
 
 	const getDocumentsQuery = useSearchTypesenseDocuments(
-		query.collection,
+		query.collection?.name ?? '',
 		query.query
 	);
 
 	const deleteDocuments = async () => {
 		try {
 			await deleteDocumentsMutation.mutate({
-				collection: query.collection,
+				collection: query.collection!.name,
 				ids: selectedDocuments,
 			});
 
@@ -54,7 +62,7 @@ export default function Home() {
 			<SearchBar
 				onChange={(collection, query, queryBy) => {
 					setQuery({
-						collection: collection.name,
+						collection: collection,
 						query: {
 							q: query,
 							query_by: queryBy.join(","),
@@ -102,6 +110,7 @@ export default function Home() {
 			</div>
 
 			<Documents
+				collection={query.collection}
 				documents={getDocumentsQuery?.data}
 				isLoading={getDocumentsQuery?.isFetching}
 				onSelectionChange={setSelectedDocuments}
